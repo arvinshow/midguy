@@ -1,0 +1,101 @@
+<?php
+defined('BASEPATH') or exit('No direct script access allowed');
+
+class fts extends CI_Controller
+{
+    public function index()
+    {
+
+        $modelbarang = 'Tatikal';
+        $ukuran = 'S';
+        $tahun = '2020';
+        function sortByAge($a, $b)
+        {
+            return $a['terjual'] > $b['terjual'];
+        }
+        $data = $this->db->get_where('data_bulanan', ['modelbarang' => $modelbarang, 'ukuran' => $ukuran, 'tahun' => $tahun])->result_array();
+
+
+        echo "<b>Contoh Dataset (menggunakan data penduduk)</b><br>";
+        echo "<table border='1' style='border-collapse:collapse;'>
+    			<tr>
+    				<td>No</td>
+    				<td>Tahun</td>
+    				<td>Tahun</td>
+    				<td>Jumlah Penduduk</td>
+    			</tr>";
+
+        foreach ($data as $key => $row) {
+            echo '<tr><td align="center">' . ($key + 1) . '</td>';
+            echo '<td align="center">' . $row['modelbarang'] . '</td>';
+            echo '<td align="center">' . $row['ukuran'] . '</td>';
+            echo '<td align="center">' . $row['terjual'] . '</td></tr>';
+        }
+        echo "</table><br>";
+
+        $jumlah_data = count($data);
+
+        // sort($data);
+
+        usort($data, 'sortByAge');
+        $dmin = $data[0]['terjual'];
+        $dmax = $data[$jumlah_data - 1]['terjual'];
+        $d1 = 0;
+        $d2 = 1;
+        echo "DMax = " . $dmax . '<br>';
+        echo "DMin = " . $dmin . '<br>';
+        echo "d1 = " . $d1 . '<br>';
+        echo "d2 = " . $d2 . '<br><br>';
+
+        // Pembentukan universe of discourse = U =[Dmin - D1, Dmax - D2]
+        $uod = array();
+        $min = $dmin - $d1;
+        $max = $dmax + $d2;
+
+        // array_push untuk memasukkan suatu nilai ke dalam array
+        array_push($uod, $min);
+        array_push($uod, $max);
+
+        echo "<b>Menentukan Universe of Discourse</b><br>";
+        echo "U = [" . $dmin . ' - ' . $d1 . ', ' . $dmax . ' + ' . $d2 . ']<br>';
+        echo "Sehingga didapatkan<br> U = [" . $uod[0] . ', ' . $uod[1] . ']<br><br>';
+
+        // Menentukan Jangkauan
+        $jangkauan = ($uod[1] - $uod[0]);
+
+        // Menentukan interval = 1 + (3.3 * log(n))
+        $banyak_kelas = ((1 + (3.3 * log10($jumlah_data))));
+
+        // Cari panjang interval 
+        $panjang_interval = round($jangkauan / $banyak_kelas);
+
+        echo "<b>Menentukan jumlah dan lebar interval</b><br>";
+        echo "Banyak Kelas = 1 + (3.322 * log10(" . $jumlah_data . ")) = " . $banyak_kelas . "<br>";
+        echo 'Jangkauan = (' . $uod[1] . ' - ' . $uod[0] . ') = ' . $jangkauan . '<br><br>';
+        echo 'Panjang Interval = (' . $jangkauan . '/' . $banyak_kelas . ') = ' . $panjang_interval . '<br><br>';
+
+        // Membagi data berdasarkan jumlah dan lebar interval 
+        $awal = $data[0]['terjual'];
+        $temp = $data[0]['terjual'];
+
+        echo '<br>Langkah selanjutnya adalah mencari linguistik value</b></br>';
+        for ($i = 1; $i <= $panjang_interval; $i++) {
+            $hitung = 0;
+            $awal += ($banyak_kelas);
+            $hitung = round(($awal + $temp) / 2);
+            echo 'U' . $i . ': ' . round($temp) . ' - ' . round($awal) . '<br>';
+            $temp = $awal;
+        }
+
+        // Menentukan fuzzy logic relationship (FLR) 
+
+        echo "<table border='1' style='border-collapse:collapse;'>
+				<tr>
+					<td>No</td>
+					<td>Bulan</td>
+					<td>Tahun</td>
+					<td>Terjual</td>
+					<td>Fuzzifikasi</td>
+				</tr>";
+    }
+}
